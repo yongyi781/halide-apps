@@ -1,8 +1,8 @@
 // HalideTutorials.cpp : Defines the entry point for the console application.
 //
 
-#include "Halide.h"
-#include "halide_utils.h"
+#include <Halide.h>
+#include "../halide_utils/halide_utils.h"
 
 using namespace std;
 using namespace Halide;

@@ -14,7 +14,7 @@ namespace halide_utils
 	// Global variable declarations
 	Halide::Var x("x"), y("y"), c("c");
 
-	// Returns the average number of milliseconds a function takes over iterations iterations.
+	// Returns the average number of seconds a function takes over iterations iterations.
 	template<typename F0>
 	double timing(F0 f, int iterations = 1)
 	{

@@ -33,7 +33,7 @@ namespace halide_utils
 		if (!message.empty())
 			std::cout << message;
 		double t = timing(f, iterations);
-		std::cout << setprecision(15) << t << " s " << std::endl;
+		std::cout << std::setprecision(15) << t << " s " << std::endl;
 	}
 
 	// Loads an image and outputs the time it took, with an option to gamma-correct.

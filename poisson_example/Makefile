@@ -18,11 +18,11 @@ all: $(OBJ) $(EXE)
 
 _build/%.o: %.cpp
 	@$(MKDIR) _build
-	$(CXX) -c $< -o $@ -I$(HALIDE_DIR)/include/ -I../ # we can include stuff from up one level, by default
+	$(CXX) -c $< -o $@ -std=c++11 -I$(HALIDE_DIR)/include/ -I$(HALIDE_DIR)/apps/support/ -I../ # we can include stuff from up one level, by default
 
 $(EXE): $(OBJ) $(HALIDE_LIB)
 	@$(MKDIR) $(BIN_DIR)
-	$(CXX) $(OBJ) $(HALIDE_LIB) -o $(EXE) -lpthread -ldl -g -Wall
+	$(CXX) $(OBJ) $(HALIDE_LIB) -o $(EXE) -lpthread -lpng -ldl -g -Wall
 
 clean:
 	$(RM) $(OBJ) $(EXE)

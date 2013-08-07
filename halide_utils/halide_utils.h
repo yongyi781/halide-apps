@@ -38,7 +38,7 @@ namespace halide_utils
 
 	// Loads an image and outputs the time it took, with an option to gamma-correct.
 	template<typename T>
-	Halide::Image<T> load2(std::string fileName = "Images/in.png", bool gammaCorrect = false)
+	Halide::Image<T> loadWithTiming(std::string fileName = "Images/in.png", bool gammaCorrect = false)
 	{
 		Halide::Image<T> im;
 		printTiming([&] { im = load<T>(fileName); }, "Loading " + fileName + "... ");
@@ -51,7 +51,7 @@ namespace halide_utils
 
 	// Saves an image and outputs the time it took, with an option to gamma-correct.
 	template<typename T>
-	void save2(const Halide::Image<T>& im, std::string fileName = "Images/out.png", bool gammaCorrect = false)
+	void saveWithTiming(const Halide::Image<T>& im, std::string fileName = "Images/out.png", bool gammaCorrect = false)
 	{
 		if (!gammaCorrect)
 			printTiming([&] { save(im, fileName); }, "Saving to " + fileName + "... ");
@@ -61,6 +61,19 @@ namespace halide_utils
 			f(x, y) = pow(im(x, y), 1 / 2.2f);
 			printTiming([&] { save((Halide::Image<T>)f.realize(im.width(), im.height(), im.channels()), fileName); }, "Saving to " + fileName + "... ");
 		}
+	}
+
+	void compileWithTiming(Halide::Func& f)
+	{
+		printTiming([&] { f.compile_jit(); }, "Compiling... ");
+	}
+
+	template<typename T>
+	Image<T> realizeWithTiming(Halide::Func& f, int width, int height, int channels = 3)
+	{
+		Image<T> out;
+		printTiming([&] { out = f.realize(width, height, channels); }, "Realizing... ");
+		return out;
 	}
 
 	// Constructs a Func with infinite domain from an image, clipping to edges.
@@ -612,7 +625,7 @@ namespace halide_utils
 
 	void rampTest(int niter = 0)
 	{
-		Halide::Image<float> maskIm = load2<float>("Images/Poisson/mask3.png");
+		Halide::Image<float> maskIm = loadWithTiming<float>("Images/Poisson/mask3.png");
 		Halide::Image<float> rampIm = ramp(maskIm.width(), maskIm.height());
 		Halide::Image<float> fgIm(maskIm.width(), maskIm.height(), 3);
 		for (int y = 0; y < fgIm.height(); ++y)
@@ -626,36 +639,36 @@ namespace halide_utils
 		Halide::Image<float> out;
 		printTiming([&] { out = poissonCG(ramp, fg, mask, maskIm.width(), maskIm.height(), niter); });
 
-		save2(out);
+		saveWithTiming(out);
 	}
 
 	namespace examples
 	{
 		void homographyExample(std::string bgImPath = "Images/pano/green.png", std::string posterImPath = "Images/pano/poster.png", std::string outFileName = "Images/out.png")
 		{
-			Halide::Image<float> im = load2<float>(bgImPath);
-			Halide::Image<float> posterIm = load2<float>(posterImPath);
+			Halide::Image<float> im = loadWithTiming<float>(bgImPath);
+			Halide::Image<float> posterIm = loadWithTiming<float>(posterImPath);
 			Halide::Image<float> out;
 			Halide::Func im1 = clipToEdges(im);
 			float H[][3] = { { 0.8025f, 0.0116f, -78.2148f }, { -0.0058f, 0.8346f, -141.3292f }, { -0.0006f, -0.0002f, 1.f } };
 			Halide::Func f = applyHomography(posterIm, im1, H, true);
 			printTiming([&] { f.compile_jit(); }, "Compiling... ");
 			printTiming([&] { out = f.realize(im.width(), im.height(), im.channels()); }, "Realizing... ");
-			save2(out, outFileName);
+			saveWithTiming(out, outFileName);
 		}
 
 		void poissonExample(std::string bgImPath = "Images/pano/boston1-4.png", std::string bearImPath = "Images/Poisson/bear.png", std::string maskImPath = "Images/Poisson/mask.png", std::string outFileName = "Images/out.png")
 		{
-			Halide::Image<float> im = load2<float>(bgImPath);
-			Halide::Image<float> bearIm = load2<float>(bearImPath);
-			Halide::Image<float> maskIm = load2<float>(maskImPath);
+			Halide::Image<float> im = loadWithTiming<float>(bgImPath);
+			Halide::Image<float> bearIm = loadWithTiming<float>(bearImPath);
+			Halide::Image<float> maskIm = loadWithTiming<float>(maskImPath);
 			Halide::Image<float> out;
 
 			Halide::Func pool = clipToEdges(im);
 			Halide::Func bear = clipToEdges(bearIm);
 			Halide::Func mask = clipToBlack(maskIm);
 			out = poissonComposite(pool, bear, mask, im.width(), im.height(), 1, 300, bearIm.width(), bearIm.height(), true, true, 200);
-			save2(out, outFileName);
+			saveWithTiming(out, outFileName);
 		}
 	}
 }
